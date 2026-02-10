@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate" />
+  <title>群管插件 · 配置面板</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { p: '#60A5FA', pd: '#3B82F6', pl: '#93C5FD', bg: '#F0F7FF', bgd: '#0B1120', card: 'rgba(255,255,255,.85)', cardd: 'rgba(15,23,42,.75)', side: '#F8FBFF', sided: '#111827' } } } }</script>
+  <style>
+    :root {
+      --ease: cubic-bezier(.4, 0, .2, 1)
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif
+    }
+
+    /* glass card */
+    .glass {
+      background: rgba(255, 255, 255, .75);
+      backdrop-filter: blur(16px);
+      border-radius: 14px;
+      border: 1px solid rgba(96, 165, 250, .12);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .04), 0 4px 14px rgba(96, 165, 250, .06);
+      transition: all .25s var(--ease)
+    }
+
+    .dark .glass {
+      background: rgba(15, 23, 42, .7);
+      border-color: rgba(96, 165, 250, .08);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .2), 0 4px 14px rgba(0, 0, 0, .15)
+    }
+
+    /* sidebar */
+    .sb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      color: #64748b;
+      cursor: pointer;
+      margin-bottom: 2px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .2s var(--ease);
+      user-select: none
+    }
+
+    .dark .sb {
+      color: #94a3b8
+    }
+
+    .sb:hover {
+      background: rgba(96, 165, 250, .08);
+      color: #3B82F6
+    }
+
+    .sb.active {
+      background: linear-gradient(135deg, #60A5FA, #3B82F6);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(59, 130, 246, .35)
+    }
+
+    .dark .sb.active {
+      box-shadow: 0 2px 10px rgba(59, 130, 246, .25)
+    }
+
+    /* buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 16px;
+      border-radius: 9px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      gap: 6px;
+      font-size: 13px;
+      transition: all .2s var(--ease);
+      user-select: none
+    }
+
+    .btn:active {
+      transform: scale(.96)
+    }
+
+    .btn-p {
+      background: linear-gradient(135deg, #60A5FA, #3B82F6);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, .25)
+    }
+
+    .btn-p:hover {
+      box-shadow: 0 4px 14px rgba(59, 130, 246, .35);
+      filter: brightness(1.05)
+    }
+
+    .btn-s {
+      background: rgba(96, 165, 250, .1);
+      color: #3B82F6;
+      border: 1px solid rgba(96, 165, 250, .2)
+    }
+
+    .dark .btn-s {
+      background: rgba(96, 165, 250, .1);
+      color: #93C5FD;
+      border-color: rgba(96, 165, 250, .15)
+    }
+
+    .btn-s:hover {
+      background: rgba(96, 165, 250, .18);
+      border-color: rgba(96, 165, 250, .3)
+    }
+
+    .btn-d {
+      background: rgba(239, 68, 68, .08);
+      color: #EF4444;
+      border: 1px solid rgba(239, 68, 68, .15)
+    }
+
+    .btn-d:hover {
+      background: rgba(239, 68, 68, .15)
+    }
+
+    /* inputs */
+    .ipt {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 9px;
+      border: 1px solid rgba(96, 165, 250, .18);
+      background: rgba(255, 255, 255, .9);
+      font-size: 13px;
+      transition: all .2s;
+      color: #1e293b
+    }
+
+    .dark .ipt {
+      background: rgba(15, 23, 42, .6);
+      border-color: rgba(96, 165, 250, .12);
+      color: #e2e8f0
+    }
+
+    .ipt:focus {
+      outline: none;
+      border-color: #60A5FA;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, .15)
+    }
+
+    /* toggle */
+    .tgl {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      background: #cbd5e1;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background .25s;
+      flex-shrink: 0
+    }
+
+    .dark .tgl {
+      background: #334155
+    }
+
+    .tgl.on {
+      background: linear-gradient(135deg, #60A5FA, #3B82F6)
+    }
+
+    .tgl::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .25s var(--ease);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .12)
+    }
+
+    .tgl.on::after {
+      transform: translateX(18px)
+    }
+
+    /* page transition */
+    .pg {
+      display: none;
+      animation: fi .3s var(--ease)
+    }
+
+    .pg.active {
+      display: block
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* section title */
+    .sec-t {
+      font-size: 12px;
+      font-weight: 600;
+      color: #3B82F6;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 10px
+    }
+
+    .dark .sec-t {
+      color: #60A5FA
+    }
+
+    /* config row */
+    .cfg-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0
+    }
+
+    .cfg-sec {
+      border-bottom: 1px solid rgba(96, 165, 250, .08);
+      padding-bottom: 14px;
+      margin-bottom: 14px
+    }
+
+    .dark .cfg-sec {
+      border-color: rgba(96, 165, 250, .06)
+    }
+
+    .cfg-sec:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0
+    }
+
+    /* toast */
+    .toast-c {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: si .3s ease;
+      font-size: 13px;
+      border: 1px solid rgba(96, 165, 250, .1)
+    }
+
+    .dark .toast {
+      background: #1e293b;
+      border-color: rgba(96, 165, 250, .08)
+    }
+
+    @keyframes si {
+      from {
+        opacity: 0;
+        transform: translateX(80px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* scrollbar */
+    .scr::-webkit-scrollbar {
+      width: 5px
+    }
+
+    .scr::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .scr::-webkit-scrollbar-thumb {
+      background: rgba(96, 165, 250, .25);
+      border-radius: 3px
+    }
+
+    /* log */
+    .log-c {
+      background: #0c1222;
+      border-radius: 10px;
+      padding: 12px;
+      max-height: 480px;
+      overflow-y: auto;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      border: 1px solid rgba(96, 165, 250, .06)
+    }
+
+    .log-e {
+      padding: 1px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      white-space: pre-wrap;
+      word-break: break-all
+    }
+
+    .log-e .lt {
+      color: #475569
+    }
+
+    .log-e.log-info .ll {
+      color: #60a5fa
+    }
+
+    .log-e.log-debug .ll {
+      color: #a78bfa
+    }
+
+    .log-e.log-warn .ll {
+      color: #fbbf24
+    }
+
+    .log-e.log-error .ll {
+      color: #f87171
+    }
+
+    .log-e .lm {
+      color: #e2e8f0
+    }
+
+    /* tab filter buttons */
+    .lfb {
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(96, 165, 250, .15);
+      background: transparent;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s var(--ease);
+      color: #64748b;
+      font-weight: 500
+    }
+
+    .dark .lfb {
+      border-color: rgba(96, 165, 250, .1);
+      color: #94a3b8
+    }
+
+    .lfb.active {
+      background: linear-gradient(135deg, #60A5FA, #3B82F6);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, .2)
+    }
+
+    .lfb:hover:not(.active) {
+      border-color: #60A5FA;
+      color: #3B82F6;
+      background: rgba(96, 165, 250, .05)
+    }
+
+    /* stat card */
+    .stat {
+      text-align: center;
+      padding: 14px 8px;
+      border-radius: 12px;
+      transition: all .2s var(--ease)
+    }
+
+    .stat:hover {
+      transform: translateY(-1px)
+    }
+  </style>
+</head>
+
+<body class="bg-[#F0F7FF] dark:bg-[#0B1120] text-gray-800 dark:text-gray-200 transition-colors duration-300">
+  <div id="tc" class="toast-c"></div>
+  <div class="flex h-screen overflow-hidden">
+    <aside
+      class="w-[200px] flex-shrink-0 bg-[#F8FBFF] dark:bg-[#111827] border-r border-blue-100/60 dark:border-blue-900/20 flex flex-col z-10 transition-colors duration-300">
+      <div class="p-4 flex items-center gap-3">
+        <div
+          class="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl text-white text-lg shadow-md shadow-blue-500/20">
+          🛡️</div>
+        <div>
+          <h1 class="font-bold text-sm leading-tight">群管插件</h1>
+          <p class="text-[10px] text-slate-400 font-medium">GroupGuard v1.0.0</p>
+        </div>
+      </div>
+      <nav class="flex-1 px-2.5 py-1 overflow-y-auto scr">
+        <div class="sb active" onclick="go('dashboard',this)">📊 仪表盘</div>
+        <div class="sb" onclick="go('global',this)">⚙️ 群管设置</div>
+        <div class="sb" onclick="go('assistant',this)">👑 主人助手</div>
+        <div class="sb" onclick="go('activity',this)">📈 活跃统计</div>
+        <div class="sb" onclick="go('sessions',this)">🛡️ 验证状态</div>
+        <div class="sb" onclick="go('logs',this)">📋 调试日志</div>
+      </nav>
+      <div class="px-3 py-2.5 border-t border-blue-100/40 dark:border-blue-900/15 flex flex-col items-center gap-1.5">
+        <a href="https://qm.qq.com/q/3tg7YvP6EU" target="_blank"
+          class="flex items-center gap-1 text-[10px] text-slate-400 hover:text-p transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.34 5L2 22l5.16-1.34C8.47 21.51 10.18 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.6 0-3.11-.45-4.39-1.23l-.31-.18-3.22.84.86-3.14-.2-.32A7.96 7.96 0 014 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z" />
+          </svg>
+          交流群
+        </a>
+        <a href="https://github.com/lengxi-root/napcat-plugin-groupguard" target="_blank"
+          class="flex items-center gap-1 text-[10px] text-slate-400 hover:text-p transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
+          </svg>
+          GitHub
+        </a>
+        <div class="text-[10px] text-slate-400">by 冷曦</div>
+      </div>
+    </aside>
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <header
+        class="sticky top-0 z-20 flex justify-end items-center px-5 py-2.5 bg-[#F0F7FF]/80 dark:bg-[#0B1120]/80 backdrop-blur-md border-b border-blue-100/30 dark:border-blue-900/10 transition-colors duration-300">
+        <div class="flex items-center gap-2.5">
+          <button onclick="doSave()" class="btn btn-p">💾 保存配置</button>
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/60 rounded-full border border-blue-100/40 dark:border-blue-900/20 backdrop-blur-sm">
+            <div id="sDot" class="w-2 h-2 rounded-full bg-red-400"></div>
+            <span class="text-xs font-medium" id="sTxt">加载中...</span>
+          </div>
+        </div>
+      </header>
+      <main class="flex-1 overflow-y-auto scr px-5 md:px-6 pb-8 pt-1">
+
+        <!-- 仪表盘 -->
+        <div id="pg-dashboard" class="pg active">
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl text-white text-xl shadow-md shadow-blue-500/20">
+                🛡️</div>
+              <div>
+                <h3 class="font-bold text-lg">群管插件</h3>
+                <p class="text-xs text-slate-400">GroupGuard v1.0.0 · by 冷曦</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="stat bg-blue-50/80 dark:bg-blue-950/30">
+                <div class="text-xl font-bold text-blue-500" id="d-gc">-</div>
+                <div class="text-[10px] text-slate-500 mt-1">管理群数</div>
+              </div>
+              <div class="stat bg-emerald-50/80 dark:bg-emerald-950/30">
+                <div class="text-xl font-bold text-emerald-500" id="d-sc">-</div>
+                <div class="text-[10px] text-slate-500 mt-1">验证中</div>
+              </div>
+              <div class="stat bg-violet-50/80 dark:bg-violet-950/30">
+                <div class="text-xl font-bold text-violet-500" id="d-arc">-</div>
+                <div class="text-[10px] text-slate-500 mt-1">防撤回群</div>
+              </div>
+              <div class="stat bg-amber-50/80 dark:bg-amber-950/30">
+                <div class="text-xl font-bold text-amber-500" id="d-erc">-</div>
+                <div class="text-[10px] text-slate-500 mt-1">回应表情群</div>
+              </div>
+            </div>
+          </div>
+          <div class="glass p-5 mb-4">
+            <div class="sec-t">主人设置</div>
+            <p class="text-xs text-slate-500 mb-2">主人QQ号（多个用逗号分隔，最高权限，可执行所有群管指令，不受管理员限制。）</p>
+            <input type="text" id="d-owner" class="ipt" placeholder="如：123456,789012">
+            <div id="ownerPv" class="mt-2 text-xs text-slate-500"></div>
+          </div>
+          <div class="glass p-5 mb-4">
+            <div class="sec-t">功能开关概览</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30"><span
+                  class="text-xs font-medium">自动通过入群</span><span class="text-[10px] px-2 py-0.5 rounded-full"
+                  id="d-aa">-</span></div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30"><span
+                  class="text-xs font-medium">入群验证</span><span class="text-[10px] px-2 py-0.5 rounded-full"
+                  id="d-ev">-</span></div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30"><span
+                  class="text-xs font-medium">刷屏检测</span><span class="text-[10px] px-2 py-0.5 rounded-full"
+                  id="d-sd">-</span></div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30"><span
+                  class="text-xs font-medium">调试模式</span><span class="text-[10px] px-2 py-0.5 rounded-full"
+                  id="d-db">-</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 群管设置 -->
+        <div id="pg-global" class="pg">
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center gap-3 flex-wrap mb-3">
+              <h3 class="font-bold text-base">全局默认配置</h3>
+              <span class="text-xs text-slate-400">所有群默认使用此配置</span>
+              <select id="grpSel" class="ipt" style="width:auto;min-width:160px" onchange="onGrp()">
+                <option value="">全局配置</option>
+              </select>
+              <div id="grpUgWrap" style="display:none" class="flex items-center gap-2">
+                <span class="text-xs text-slate-500">使用全局</span>
+                <div class="tgl on" id="grp-ug" onclick="tg(this);onGrpToggle()"></div>
+              </div>
+              <div id="presetWrap" style="display:none" class="flex items-center gap-1">
+                <select id="presetSel" class="ipt" style="width:auto;min-width:120px">
+                  <option value="">应用预设...</option>
+                </select>
+                <button onclick="applyPreset()" class="btn btn-p" style="font-size:11px;padding:5px 12px">应用</button>
+              </div>
+              <button onclick="showSavePreset()" class="btn btn-s" style="font-size:11px;padding:5px 12px">💾
+                存为预设</button>
+              <button onclick="showManagePresets()" class="btn btn-s" style="font-size:11px;padding:5px 12px">📋
+                管理预设</button>
+            </div>
+            <div id="presetSaveRow" style="display:none" class="flex items-center gap-2 mb-3">
+              <input type="text" id="presetName" class="ipt" style="width:200px" placeholder="输入预设名称">
+              <button onclick="doSavePreset()" class="btn btn-p" style="font-size:11px;padding:5px 12px">确认保存</button>
+              <button onclick="$('presetSaveRow').style.display='none'" class="btn btn-s"
+                style="font-size:11px;padding:5px 12px">取消</button>
+            </div>
+            <div id="presetMgrRow" style="display:none" class="mb-3">
+              <div id="presetMgrList"></div>
+            </div>
+            <div class="flex gap-1.5 mb-4 flex-wrap">
+              <button class="lfb active" onclick="gTab('gt-join',this)">入群管理</button>
+              <button class="lfb" onclick="gTab('gt-filter',this)">违禁词</button>
+              <button class="lfb" onclick="gTab('gt-bw',this)">黑白名单</button>
+              <button class="lfb" onclick="gTab('gt-spam',this)">刷屏检测</button>
+              <button class="lfb" onclick="gTab('gt-msgf',this)">消息过滤</button>
+              <button class="lfb" onclick="gTab('gt-qa',this)">问答</button>
+            </div>
+
+            <!-- 入群管理 -->
+            <div id="gt-join">
+              <div class="cfg-sec">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="cfg-row">
+                    <div>
+                      <div class="text-sm font-medium">自动通过入群申请</div>
+                      <div class="text-xs text-slate-400">自动同意所有入群申请</div>
+                    </div>
+                    <div class="tgl" id="c-aa" onclick="tg(this)"></div>
+                  </div>
+                  <div class="cfg-row">
+                    <div>
+                      <div class="text-sm font-medium">启用入群验证</div>
+                      <div class="text-xs text-slate-400">新成员进群后需回答数学题</div>
+                    </div>
+                    <div class="tgl" id="c-ev" onclick="tg(this)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cfg-sec">
+                <div class="sec-t">验证参数</div>
+                <div class="grid grid-cols-4 gap-3">
+                  <div><label class="text-xs text-slate-500">验证超时（秒）</label><input type="number" id="c-vt" class="ipt"
+                      value="300"></div>
+                  <div><label class="text-xs text-slate-500">最大尝试次数</label><input type="number" id="c-ma" class="ipt"
+                      value="5"></div>
+                  <div><label class="text-xs text-slate-500">数值最小值</label><input type="number" id="c-mn" class="ipt"
+                      value="1"></div>
+                  <div><label class="text-xs text-slate-500">数值最大值</label><input type="number" id="c-mx" class="ipt"
+                      value="100"></div>
+                </div>
+              </div>
+              <div class="cfg-sec">
+                <div class="flex items-center gap-3">
+                  <div class="sec-t flex-shrink-0" style="margin-bottom:0;white-space:nowrap">欢迎词 <span
+                      class="font-normal text-slate-400" style="text-transform:none;letter-spacing:0">支持 {user}=QQ号
+                      {group}=群号，留空不发送</span></div>
+                  <input type="text" id="c-wm" class="ipt" placeholder="欢迎 {user} 加入本群！">
+                </div>
+              </div>
+              <div class="cfg-sec">
+                <div class="flex items-center gap-3">
+                  <div class="sec-t flex-shrink-0" style="margin-bottom:0;white-space:nowrap">针对用户 <span
+                      class="font-normal text-slate-400"
+                      style="text-transform:none;letter-spacing:0">自动撤回，多个QQ号用逗号分隔</span></div>
+                  <input type="text" id="c-tu" class="ipt" placeholder="如：123456,789012">
+                </div>
+              </div>
+            </div>
+            <!-- 违禁词 -->
+            <div id="gt-filter" style="display:none">
+              <div class="cfg-sec">
+                <div class="sec-t">违禁词列表 <span class="font-normal text-slate-400"
+                    style="text-transform:none;letter-spacing:0">触发违禁词的消息将根据惩罚等级处理</span></div>
+                <p class="text-xs text-slate-500 mb-2">每行一个违禁词。</p>
+                <textarea id="c-fk" class="ipt" rows="4" placeholder="每行一个违禁词"></textarea>
+              </div>
+              <div class="cfg-sec">
+                <div class="sec-t">惩罚设置</div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-xs text-slate-500">惩罚等级</label><select id="c-fp" class="ipt">
+                      <option value="1">1 - 仅撤回</option>
+                      <option value="2">2 - 撤回+禁言</option>
+                      <option value="3">3 - 撤回+踢出</option>
+                      <option value="4">4 - 撤回+踢出+拉黑</option>
+                    </select></div>
+                  <div><label class="text-xs text-slate-500">禁言时长（分钟，等级2）</label><input type="number" id="c-fb"
+                      class="ipt" value="10"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 黑白名单 -->
+            <div id="gt-bw" style="display:none">
+              <div class="sec-t" style="margin-bottom:8px">黑白名单 <span class="font-normal text-slate-400"
+                  style="text-transform:none;letter-spacing:0">黑名单用户发言立即撤回并踢出，入群自动拒绝。白名单不受限制</span></div>
+              <div class="grid grid-cols-3 gap-3 items-end">
+                <div>
+                  <div class="cfg-row" style="padding:0 0 4px">
+                    <div>
+                      <div class="text-sm font-medium">退群自动拉黑</div>
+                      <div class="text-[10px] text-slate-400">退群自动加入黑名单</div>
+                    </div>
+                    <div class="tgl" id="c-lb" onclick="tg(this)"></div>
+                  </div>
+                </div>
+                <div><label class="text-xs text-slate-500">黑名单（逗号分隔）</label><input type="text" id="c-bl" class="ipt"
+                    placeholder="如：123456,789012"></div>
+                <div><label class="text-xs text-slate-500">白名单（逗号分隔）</label><input type="text" id="c-wl" class="ipt"
+                    placeholder="如：123456,789012"></div>
+              </div>
+            </div>
+            <!-- 刷屏检测 -->
+            <div id="gt-spam" style="display:none">
+              <div class="sec-t" style="margin-bottom:8px">刷屏检测 <span class="font-normal text-slate-400"
+                  style="text-transform:none;letter-spacing:0">在指定时间窗口内发送超过阈值数量的消息，自动禁言</span></div>
+              <div class="grid grid-cols-4 gap-3 items-end">
+                <div>
+                  <div class="cfg-row" style="padding:0 0 4px">
+                    <div>
+                      <div class="text-sm font-medium">启用刷屏检测</div>
+                    </div>
+                    <div class="tgl" id="c-sd" onclick="tg(this)"></div>
+                  </div>
+                </div>
+                <div><label class="text-xs text-slate-500">时间窗口（秒）</label><input type="number" id="c-sw" class="ipt"
+                    value="10"></div>
+                <div><label class="text-xs text-slate-500">消息数量阈值</label><input type="number" id="c-st" class="ipt"
+                    value="10"></div>
+                <div><label class="text-xs text-slate-500">禁言时长（分钟）</label><input type="number" id="c-sb" class="ipt"
+                    value="5"></div>
+              </div>
+            </div>
+            <!-- 消息过滤 -->
+            <div id="gt-msgf" style="display:none">
+              <div class="sec-t" style="margin-bottom:8px">消息类型过滤 <span class="font-normal text-slate-400"
+                  style="text-transform:none;letter-spacing:0">开启后自动撤回对应类型的消息</span></div>
+              <div class="grid grid-cols-4 gap-2">
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽视频</div>
+                  <div class="tgl" id="c-mf-v" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽图片</div>
+                  <div class="tgl" id="c-mf-i" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽语音</div>
+                  <div class="tgl" id="c-mf-r" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽转发</div>
+                  <div class="tgl" id="c-mf-f" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽小程序</div>
+                  <div class="tgl" id="c-mf-l" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽名片</div>
+                  <div class="tgl" id="c-mf-c" onclick="tg(this)"></div>
+                </div>
+                <div class="cfg-row">
+                  <div class="text-sm font-medium">屏蔽链接</div>
+                  <div class="tgl" id="c-mf-u" onclick="tg(this)"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 问答 -->
+            <div id="gt-qa" style="display:none">
+              <div class="sec-t" style="margin-bottom:8px">自动问答 <span class="font-normal text-slate-400"
+                  style="text-transform:none;letter-spacing:0">匹配关键词自动回复，支持精确/模糊/正则，变量: {user} {group}</span></div>
+              <div class="flex gap-2 mb-3 items-end">
+                <div class="flex-1"><label class="text-xs text-slate-500">关键词</label><input type="text" id="qa-kw"
+                    class="ipt" placeholder="触发关键词"></div>
+                <div class="flex-1"><label class="text-xs text-slate-500">回复内容</label><input type="text" id="qa-rp"
+                    class="ipt" placeholder="回复内容，支持 {user} {group}"></div>
+                <div><label class="text-xs text-slate-500">匹配模式</label><select id="qa-mode" class="ipt"
+                    style="width:auto">
+                    <option value="exact">精确</option>
+                    <option value="contains">模糊</option>
+                    <option value="regex">正则</option>
+                  </select></div>
+                <button onclick="addQA()" class="btn btn-p" style="white-space:nowrap">添加</button>
+              </div>
+              <div id="qaList" style="max-height:300px;overflow-y:auto" class="scr"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主人助手 -->
+        <div id="pg-assistant" class="pg">
+          <div class="glass p-5 mb-4">
+            <div class="sec-t">全局防撤回</div>
+            <p class="text-xs text-slate-400 mb-2">开启后，任何群有人撤回消息都会私发给主人。</p>
+            <div class="cfg-row">
+              <div>
+                <div class="text-sm font-medium">开启全局防撤回</div>
+                <div class="text-xs text-slate-400">撤回消息私发主人（需先设置主人QQ）</div>
+              </div>
+              <div class="tgl" id="a-gar" onclick="tg(this)"></div>
+            </div>
+            <div
+              class="mt-2 p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/20 text-xs text-amber-600 dark:text-amber-400 border border-amber-200/40 dark:border-amber-800/20">
+              ⚠️ 此功能会缓存所有群消息，请确保已设置主人QQ。</div>
+          </div>
+          <div class="glass p-5 mb-4">
+            <div class="sec-t">全局回应表情</div>
+            <p class="text-xs text-slate-400 mb-2">开启后，自动给所有群的所有消息点赞。</p>
+            <div class="cfg-row">
+              <div>
+                <div class="text-sm font-medium">开启全局回应表情</div>
+              </div>
+              <div class="tgl" id="a-ger" onclick="tg(this)"></div>
+            </div>
+          </div>
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="sec-t" style="margin-bottom:0">黑名单管理 <span class="font-normal text-slate-400"
+                  style="text-transform:none;letter-spacing:0">查看和管理全局黑名单中的用户</span></div>
+              <button onclick="loadBlMgr()" class="btn btn-s" style="font-size:11px;padding:5px 12px">🔄 刷新</button>
+            </div>
+            <div id="blMgr">
+              <p class="text-xs text-slate-400">加载中...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 活跃统计 -->
+        <div id="pg-activity" class="pg">
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-base">群成员活跃统计</h3>
+              <div class="flex gap-2">
+                <select id="actGrp" class="ipt" style="width:auto" onchange="loadAct()">
+                  <option value="">全部群</option>
+                </select>
+                <button onclick="loadAct()" class="btn btn-p">刷新</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <div class="stat bg-blue-50/80 dark:bg-blue-950/30">
+                <div class="text-lg font-bold text-blue-500" id="a-tu">-</div>
+                <div class="text-[10px] text-slate-500">活跃用户</div>
+              </div>
+              <div class="stat bg-emerald-50/80 dark:bg-emerald-950/30">
+                <div class="text-lg font-bold text-emerald-500" id="a-tm">-</div>
+                <div class="text-[10px] text-slate-500">总消息数</div>
+              </div>
+              <div class="stat bg-violet-50/80 dark:bg-violet-950/30">
+                <div class="text-lg font-bold text-violet-500" id="a-tdm">-</div>
+                <div class="text-[10px] text-slate-500">今日消息</div>
+              </div>
+              <div class="stat bg-amber-50/80 dark:bg-amber-950/30">
+                <div class="text-lg font-bold text-amber-500" id="a-tda">-</div>
+                <div class="text-[10px] text-slate-500">今日活跃</div>
+              </div>
+            </div>
+            <div style="max-height:380px;overflow-y:auto" class="scr">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:2px solid rgba(96,165,250,.15);text-align:left">
+                    <th style="padding:6px 4px">排名</th>
+                    <th style="padding:6px 4px">QQ号</th>
+                    <th style="padding:6px 4px">群号</th>
+                    <th style="padding:6px 4px">总消息</th>
+                    <th style="padding:6px 4px">今日</th>
+                    <th style="padding:6px 4px">最后活跃</th>
+                  </tr>
+                </thead>
+                <tbody id="actTb"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 验证状态 -->
+        <div id="pg-sessions" class="pg">
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-base">当前验证会话</h3>
+              <button onclick="loadSess()" class="btn btn-s">刷新</button>
+            </div>
+            <div id="sessList">
+              <p class="text-slate-400 text-xs">加载中...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 调试日志 -->
+        <div id="pg-logs" class="pg">
+          <div class="glass p-5 mb-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="font-bold text-base">调试日志</h3>
+                <p class="text-xs text-slate-400">实时查看插件运行日志。</p>
+              </div>
+              <div class="flex gap-2 items-center">
+                <div class="flex items-center gap-1.5"><span class="text-xs">调试</span>
+                  <div class="tgl" id="l-db" onclick="tg(this);tglDbg()"></div>
+                </div>
+                <button onclick="loadLogs()" class="btn btn-p">刷新</button>
+                <button onclick="clrLogs()" class="btn btn-s">清除</button>
+              </div>
+            </div>
+            <div class="flex gap-1.5 mb-2">
+              <button class="lfb active" onclick="fltLog('all',this)">全部</button>
+              <button class="lfb" onclick="fltLog('info',this)">INFO</button>
+              <button class="lfb" onclick="fltLog('debug',this)">DEBUG</button>
+              <button class="lfb" onclick="fltLog('warn',this)">WARN</button>
+              <button class="lfb" onclick="fltLog('error',this)">ERROR</button>
+            </div>
+            <div id="logC" class="log-c scr">
+              <p style="color:#64748b">加载中...</p>
+            </div>
+            <div class="flex items-center justify-between mt-2">
+              <span class="text-[10px] text-slate-400" id="logCnt">0 条</span>
+              <label class="flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer"><input type="checkbox"
+                  id="logAS" checked> 自动滚动</label>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // 检测暗黑模式
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      e.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+    });
+
+    const API = '/plugin/napcat-plugin-groupguard/api';
+    let C = {}, GL = [], logD = [], logFlt = 'all', logTmr = null;
+    let editMode = '';
+
+    function $ (id) { return document.getElementById(id); }
+    function toast (m, t = 'info') { const c = $('tc'), icons = { success: '✅', error: '❌', info: 'ℹ️' }, d = document.createElement('div'); d.className = 'toast'; d.innerHTML = `<span>${icons[t] || ''}</span><span>${m}</span>`; c.appendChild(d); setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 300); }, 3000); }
+    function tg (el) { el.classList.toggle('on'); }
+    function stg (id, v) { const e = $(id); if (e) { if (v) e.classList.add('on'); else e.classList.remove('on'); } }
+    function gtg (id) { return $(id)?.classList.contains('on') || false; }
+    function sv (id, v) { const e = $(id); if (e) e.value = v; }
+    function gn (id, d) { const v = parseInt($(id)?.value); return isNaN(v) ? d : v; }
+    function esc (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    async function af (p, m = 'GET', b = null) { const o = { method: m, headers: { 'Content-Type': 'application/json' } }; if (b) o.body = JSON.stringify(b); return (await fetch(API + p, o)).json(); }
+
+    function go (pg, el) {
+      document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sb').forEach(s => s.classList.remove('active'));
+      $('pg-' + pg)?.classList.add('active'); el?.classList.add('active');
+      if (pg === 'dashboard') updDash();
+      if (pg === 'sessions') loadSess();
+      if (pg === 'global') popGrpSel();
+      if (pg === 'activity') { popActSel(); loadAct(); }
+      if (pg === 'assistant') loadBlMgr();
+      if (pg === 'logs') { stg('l-db', C.debug); loadLogs(); startLR(); } else stopLR();
+    }
+
+    function badge (id, on) { const e = $(id); if (!e) return; e.textContent = on ? '已开启' : '已关闭'; e.className = on ? 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'; }
+
+    async function loadCfg () { try { const r = await af('/config'); if (r.code === 0) { C = r.data || {}; fillGlobal(); $('sDot').className = 'w-2 h-2 rounded-full bg-emerald-400'; $('sTxt').textContent = '已连接'; return true; } } catch { } toast('加载配置失败', 'error'); return false; }
+    async function loadGrps () { try { const r = await af('/groups'); if (r.code === 0) GL = r.data || []; } catch { } }
+
+    function fillGlobal () {
+      const g = C.global || {};
+      stg('c-aa', g.autoApprove); stg('c-ev', g.enableVerify);
+      sv('c-vt', g.verifyTimeout || 300); sv('c-ma', g.maxAttempts || 5); sv('c-mn', g.mathMin || 1); sv('c-mx', g.mathMax || 100);
+      sv('c-tu', (g.targetUsers || []).join(','));
+      sv('c-wm', C.welcomeMessage || '');
+      sv('c-fk', (C.filterKeywords || []).join('\n'));
+      $('c-fp').value = C.filterPunishLevel || 1;
+      sv('c-fb', C.filterBanMinutes || 10);
+      sv('c-bl', (C.blacklist || []).join(','));
+      sv('c-wl', (C.whitelist || []).join(','));
+      stg('c-lb', C.leaveBlacklist);
+      stg('c-sd', C.spamDetect);
+      sv('c-sw', C.spamWindow || 10); sv('c-st', C.spamThreshold || 10); sv('c-sb', C.spamBanMinutes || 5);
+      const mf = C.msgFilter || {};
+      stg('c-mf-v', mf.blockVideo); stg('c-mf-i', mf.blockImage); stg('c-mf-r', mf.blockRecord);
+      stg('c-mf-f', mf.blockForward); stg('c-mf-l', mf.blockLightApp); stg('c-mf-c', mf.blockContact); stg('c-mf-u', mf.blockUrl);
+      renderQA(C.qaList || []);
+      sv('d-owner', C.ownerQQs || '');
+      stg('a-gar', C.globalAntiRecall); stg('a-ger', C.globalEmojiReact);
+      updDash(); loadBlMgr();
+    }
+
+    function fillGroup (gid) {
+      const gs = (C.groups || {})[gid] || {};
+      const g = C.global || {};
+      stg('c-aa', gs.autoApprove ?? g.autoApprove); stg('c-ev', gs.enableVerify ?? g.enableVerify);
+      sv('c-vt', gs.verifyTimeout || g.verifyTimeout || 300); sv('c-ma', gs.maxAttempts || g.maxAttempts || 5);
+      sv('c-mn', gs.mathMin ?? g.mathMin ?? 1); sv('c-mx', gs.mathMax ?? g.mathMax ?? 100);
+      sv('c-tu', (gs.targetUsers || []).join(','));
+      sv('c-wm', gs.welcomeMessage || '');
+      sv('c-fk', (gs.filterKeywords || []).join('\n'));
+      $('c-fp').value = gs.filterPunishLevel || 1;
+      sv('c-fb', gs.filterBanMinutes || 10);
+      sv('c-bl', (gs.groupBlacklist || []).join(','));
+      sv('c-wl', '');
+      stg('c-lb', gs.leaveBlacklist);
+      stg('c-sd', gs.spamDetect);
+      sv('c-sw', gs.spamWindow || 10); sv('c-st', gs.spamThreshold || 10); sv('c-sb', gs.spamBanMinutes || 5);
+      const mf = gs.msgFilter || {};
+      stg('c-mf-v', mf.blockVideo); stg('c-mf-i', mf.blockImage); stg('c-mf-r', mf.blockRecord);
+      stg('c-mf-f', mf.blockForward); stg('c-mf-l', mf.blockLightApp); stg('c-mf-c', mf.blockContact); stg('c-mf-u', mf.blockUrl);
+      renderQA(gs.qaList || []);
+    }
+
+    function collectGlobal () {
+      C.global = { useGlobal: false, autoApprove: gtg('c-aa'), enableVerify: gtg('c-ev'), verifyTimeout: gn('c-vt', 300), maxAttempts: gn('c-ma', 5), mathMin: gn('c-mn', 1), mathMax: gn('c-mx', 100), targetUsers: ($('c-tu')?.value || '').split(',').map(s => s.trim()).filter(Boolean) };
+      C.welcomeMessage = $('c-wm')?.value || '';
+      C.filterKeywords = ($('c-fk')?.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+      C.filterPunishLevel = parseInt($('c-fp')?.value) || 1;
+      C.filterBanMinutes = gn('c-fb', 10);
+      C.blacklist = ($('c-bl')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+      C.whitelist = ($('c-wl')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+      C.leaveBlacklist = gtg('c-lb');
+      C.spamDetect = gtg('c-sd'); C.spamWindow = gn('c-sw', 10); C.spamThreshold = gn('c-st', 10); C.spamBanMinutes = gn('c-sb', 5);
+      C.msgFilter = { blockVideo: gtg('c-mf-v'), blockImage: gtg('c-mf-i'), blockRecord: gtg('c-mf-r'), blockForward: gtg('c-mf-f'), blockLightApp: gtg('c-mf-l'), blockContact: gtg('c-mf-c'), blockUrl: gtg('c-mf-u') };
+      C.qaList = collectQA();
+    }
+
+    function collectGroup (gid) {
+      C.groups = C.groups || {};
+      const fk = ($('c-fk')?.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+      C.groups[gid] = {
+        useGlobal: false, autoApprove: gtg('c-aa'), enableVerify: gtg('c-ev'),
+        verifyTimeout: gn('c-vt', 300), maxAttempts: gn('c-ma', 5), mathMin: gn('c-mn', 1), mathMax: gn('c-mx', 100),
+        targetUsers: ($('c-tu')?.value || '').split(',').map(s => s.trim()).filter(Boolean),
+        groupBlacklist: ($('c-bl')?.value || '').split(',').map(s => s.trim()).filter(Boolean),
+        leaveBlacklist: gtg('c-lb'),
+        welcomeMessage: $('c-wm')?.value || '',
+        filterKeywords: fk, filterPunishLevel: parseInt($('c-fp')?.value) || 1, filterBanMinutes: gn('c-fb', 10),
+        spamDetect: gtg('c-sd'), spamWindow: gn('c-sw', 10), spamThreshold: gn('c-st', 10), spamBanMinutes: gn('c-sb', 5),
+        msgFilter: { blockVideo: gtg('c-mf-v'), blockImage: gtg('c-mf-i'), blockRecord: gtg('c-mf-r'), blockForward: gtg('c-mf-f'), blockLightApp: gtg('c-mf-l'), blockContact: gtg('c-mf-c'), blockUrl: gtg('c-mf-u') },
+        qaList: collectQA(),
+      };
+    }
+
+    function updDash () {
+      $('d-gc').textContent = GL.length; $('d-sc').textContent = '-';
+      $('d-arc').textContent = (C.antiRecallGroups || []).length;
+      $('d-erc').textContent = Object.keys(C.emojiReactGroups || {}).length;
+      const g = C.global || {};
+      badge('d-aa', g.autoApprove); badge('d-ev', g.enableVerify); badge('d-sd', C.spamDetect); badge('d-db', C.debug);
+      const ow = (C.ownerQQs || '').split(',').map(s => s.trim()).filter(Boolean);
+      $('ownerPv').textContent = ow.length ? `当前主人：${ow.join('、')}（共${ow.length}人）` : '尚未设置主人';
+      af('/sessions').then(r => { if (r.code === 0) $('d-sc').textContent = (r.data || []).length; }).catch(() => { });
+    }
+
+    function popGrpSel () { const s = $('grpSel'); const cv = s.value; s.innerHTML = '<option value="">全局配置</option>' + GL.map(g => `<option value="${g.group_id}">${g.group_name || g.group_id} (${g.group_id})</option>`).join(''); if (cv) s.value = cv; }
+
+    function onGrp () {
+      if (editMode) collectGroup(editMode); else collectGlobal();
+      const gid = $('grpSel').value;
+      if (!gid) {
+        editMode = ''; $('grpUgWrap').style.display = 'none'; $('presetWrap').style.display = 'none';
+        fillGlobal(); setFormDisabled(false); return;
+      }
+      editMode = gid;
+      const gs = (C.groups || {})[gid];
+      const isGlobal = !gs || gs.useGlobal !== false;
+      $('grpUgWrap').style.display = 'flex';
+      $('presetWrap').style.display = 'flex';
+      popPresetSel();
+      stg('grp-ug', isGlobal);
+      if (isGlobal) { fillGlobal(); setFormDisabled(true); }
+      else { fillGroup(gid); setFormDisabled(false); }
+    }
+
+    function onGrpToggle () {
+      const gid = editMode; if (!gid) return;
+      const useG = gtg('grp-ug');
+      if (useG) {
+        C.groups = C.groups || {};
+        C.groups[gid] = { useGlobal: true };
+        fillGlobal(); setFormDisabled(true);
+      } else {
+        fillGroup(gid); setFormDisabled(false);
+      }
+    }
+
+    function setFormDisabled (off) {
+      const area = $('pg-global'); if (!area) return;
+      area.querySelectorAll('[id^="gt-"] input,[id^="gt-"] select,[id^="gt-"] textarea,[id^="gt-"] .tgl').forEach(el => {
+        if (off) { el.style.opacity = '.4'; el.style.pointerEvents = 'none'; }
+        else { el.style.opacity = ''; el.style.pointerEvents = ''; }
+      });
+    }
+
+    async function doSave () {
+      C.ownerQQs = $('d-owner')?.value || '';
+      C.globalAntiRecall = gtg('a-gar'); C.globalEmojiReact = gtg('a-ger');
+      if (editMode) { collectGroup(editMode); } else { collectGlobal(); }
+      try { const r = await af('/config', 'POST', C); if (r.code === 0) toast('配置已保存', 'success'); else toast('保存失败: ' + r.message, 'error'); } catch { toast('保存失败', 'error'); }
+    }
+
+    function gTab (tabId, btn) { const p = btn.parentElement; p.querySelectorAll('.lfb').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const pfx = tabId.substring(0, tabId.lastIndexOf('-')); document.querySelectorAll('div[id^="' + pfx + '-"]').forEach(d => d.style.display = 'none'); $(tabId).style.display = ''; }
+
+    async function loadSess () { const c = $('sessList'); try { const r = await af('/sessions'); if (r.code === 0) { const l = r.data || []; if (!l.length) { c.innerHTML = '<p class="text-slate-400 text-xs">当前没有进行中的验证。</p>'; return; } c.innerHTML = l.map(s => `<div class="border border-blue-100/40 dark:border-blue-900/20 rounded-xl p-3 mb-2 bg-white/40 dark:bg-slate-800/30"><div class="flex items-center justify-between"><div><span class="font-bold text-sm">用户 ${s.userId}</span><span class="text-[10px] text-slate-400 ml-2">群 ${s.groupId}</span></div><span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">剩余 ${Math.ceil(s.remainingMs / 1000)}s</span></div><div class="text-xs text-slate-400 mt-1">题目: ${s.expression} | 已尝试 ${s.attempts}/${s.maxAttempts}</div></div>`).join(''); } } catch { c.innerHTML = '<p class="text-red-500 text-xs">获取失败</p>'; } }
+
+    function popActSel () { const s = $('actGrp'); s.innerHTML = '<option value="">全部群</option>' + GL.map(g => `<option value="${g.group_id}">${g.group_name || g.group_id} (${g.group_id})</option>`).join(''); }
+    async function loadAct () { const gid = $('actGrp')?.value || ''; try { const r = await af(gid ? `/activity?group_id=${gid}` : '/activity'); if (r.code === 0) { const st = r.data || {}, td = new Date().toISOString().slice(0, 10); const es = []; if (gid) { for (const [uid, v] of Object.entries(st)) es.push({ gid, uid, ...v }); } else { for (const [g, users] of Object.entries(st)) { for (const [uid, v] of Object.entries(users)) es.push({ gid: g, uid, ...v }); } } es.sort((a, b) => b.msgCount - a.msgCount); $('a-tu').textContent = es.length; $('a-tm').textContent = es.reduce((s, e) => s + (e.msgCount || 0), 0); const tde = es.filter(e => e.todayDate === td); $('a-tdm').textContent = tde.reduce((s, e) => s + (e.todayCount || 0), 0); $('a-tda').textContent = tde.filter(e => e.todayCount > 0).length; const tb = $('actTb'); if (!es.length) { tb.innerHTML = '<tr><td colspan="6" style="padding:12px;text-align:center;color:#6b7280">暂无数据</td></tr>'; return; } tb.innerHTML = es.slice(0, 100).map((e, i) => { const lt = e.lastActive ? new Date(e.lastActive).toLocaleString('zh-CN') : '-'; return `<tr style="border-bottom:1px solid rgba(96,165,250,.06)"><td style="padding:4px">${i + 1}</td><td style="padding:4px">${e.uid}</td><td style="padding:4px">${e.gid}</td><td style="padding:4px">${e.msgCount || 0}</td><td style="padding:4px">${e.todayDate === td ? (e.todayCount || 0) : 0}</td><td style="padding:4px;font-size:11px;color:#6b7280">${lt}</td></tr>`; }).join(''); } } catch { $('actTb').innerHTML = '<tr><td colspan="6" style="padding:12px;text-align:center;color:#ef4444">获取失败</td></tr>'; } }
+
+    function loadBlMgr () { const c = $('blMgr'); const list = C.blacklist || []; if (!list.length) { c.innerHTML = '<p class="text-xs text-slate-400">黑名单为空</p>'; return; } c.innerHTML = '<div style="max-height:240px;overflow-y:auto" class="scr">' + list.map(qq => `<div class="flex items-center justify-between p-2 mb-1 rounded-lg bg-slate-50/80 dark:bg-slate-800/30"><span class="text-xs font-mono">${esc(qq)}</span><button onclick="rmBl('${esc(qq)}')" class="btn btn-d" style="font-size:10px;padding:2px 8px">移除</button></div>`).join('') + '</div><div class="text-[10px] text-slate-400 mt-1">共 ' + list.length + ' 人</div>'; }
+    async function rmBl (qq) { C.blacklist = (C.blacklist || []).filter(q => q !== qq); try { const r = await af('/config', 'POST', C); if (r.code === 0) { toast('已移除 ' + qq, 'success'); loadBlMgr(); } else toast('操作失败', 'error'); } catch { toast('操作失败', 'error'); } }
+
+    async function loadLogs () { try { const r = await af('/logs'); if (r.code === 0) { logD = r.data || []; rndLogs(); } } catch { $('logC').innerHTML = '<p style="color:#ef4444">获取失败</p>'; } }
+    function rndLogs () { const c = $('logC'), f = logFlt === 'all' ? logD : logD.filter(l => l.level === logFlt); $('logCnt').textContent = `${f.length}/${logD.length} 条`; if (!f.length) { c.innerHTML = '<p style="color:#64748b">暂无日志</p>'; return; } c.innerHTML = f.map(l => { const t = new Date(l.time), ts = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}.${String(t.getMilliseconds()).padStart(3, '0')}`, lv = l.level.toUpperCase().padEnd(5); return `<div class="log-e log-${l.level}"><span class="lt">${ts}</span> <span class="ll">[${lv}]</span> <span class="lm">${esc(l.msg)}</span></div>`; }).join(''); if ($('logAS')?.checked) c.scrollTop = c.scrollHeight; }
+    function fltLog (lv, btn) { logFlt = lv; btn.parentElement.querySelectorAll('.lfb').forEach(b => b.classList.remove('active')); btn?.classList.add('active'); rndLogs(); }
+    async function clrLogs () { try { await af('/logs/clear', 'POST'); logD = []; rndLogs(); toast('日志已清除', 'success'); } catch { toast('清除失败', 'error'); } }
+    function tglDbg () { const on = gtg('l-db'); C.debug = on; af('/config', 'POST', C).then(() => { toast(on ? '调试模式已开启' : '调试模式已关闭', 'info'); updDash(); }).catch(() => { }); }
+    function startLR () { if (logTmr) return; logTmr = setInterval(loadLogs, 3000); }
+    function stopLR () { if (logTmr) { clearInterval(logTmr); logTmr = null; } }
+
+    // ===== QA functions =====
+    let _qaData = [];
+    function renderQA (list) {
+      _qaData = list || [];
+      const c = $('qaList'); if (!c) return;
+      const modeMap = { exact: '精确', contains: '模糊', regex: '正则' };
+      if (!_qaData.length) { c.innerHTML = '<p class="text-xs text-slate-400">暂无问答条目</p>'; return; }
+      c.innerHTML = _qaData.map((q, i) => `<div class="flex items-center justify-between p-2.5 mb-1.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30 border border-blue-100/20 dark:border-blue-900/10"><div class="flex-1 text-xs"><span class="px-1.5 py-0.5 rounded-md bg-blue-100/80 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] mr-1.5 font-medium">${modeMap[q.mode] || q.mode}</span><span class="font-mono font-medium">${esc(q.keyword)}</span> <span class="text-slate-300 dark:text-slate-600 mx-1">→</span> <span>${esc(q.reply)}</span></div><button onclick="rmQA(${i})" class="btn btn-d" style="font-size:10px;padding:2px 8px">删除</button></div>`).join('');
+    }
+    function collectQA () { return _qaData.slice(); }
+    function addQA () {
+      const kw = $('qa-kw')?.value?.trim(); const rp = $('qa-rp')?.value?.trim(); const mode = $('qa-mode')?.value || 'exact';
+      if (!kw || !rp) { toast('关键词和回复不能为空', 'error'); return; }
+      _qaData.push({ keyword: kw, reply: rp, mode }); renderQA(_qaData);
+      $('qa-kw').value = ''; $('qa-rp').value = '';
+    }
+    function rmQA (i) { _qaData.splice(i, 1); renderQA(_qaData); }
+
+    // ===== Preset functions =====
+    function popPresetSel () {
+      const s = $('presetSel'); if (!s) return;
+      const presets = C.presets || [];
+      s.innerHTML = '<option value="">应用预设...</option>' + presets.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('');
+    }
+    function showSavePreset () {
+      $('presetSaveRow').style.display = 'flex'; $('presetMgrRow').style.display = 'none';
+      $('presetName').value = ''; $('presetName').focus();
+    }
+    function doSavePreset () {
+      const name = $('presetName')?.value?.trim();
+      if (!name) { toast('请输入预设名称', 'error'); return; }
+      if (editMode) collectGroup(editMode); else collectGlobal();
+      const settings = editMode ? JSON.parse(JSON.stringify(C.groups[editMode] || C.global)) : JSON.parse(JSON.stringify(C.global));
+      const gf = editMode ? undefined : {
+        filterKeywords: (C.filterKeywords || []).slice(),
+        filterPunishLevel: C.filterPunishLevel || 1, filterBanMinutes: C.filterBanMinutes || 10,
+        blacklist: (C.blacklist || []).slice(), whitelist: (C.whitelist || []).slice(),
+        leaveBlacklist: C.leaveBlacklist || false,
+        spamDetect: C.spamDetect || false, spamWindow: C.spamWindow || 10, spamThreshold: C.spamThreshold || 10, spamBanMinutes: C.spamBanMinutes || 5,
+        msgFilter: C.msgFilter ? { ...C.msgFilter } : {},
+        welcomeMessage: C.welcomeMessage || '', qaList: (C.qaList || []).slice(),
+      };
+      if (!C.presets) C.presets = [];
+      C.presets.push({ name, settings, globalFields: gf });
+      af('/presets', 'POST', { presets: C.presets }).then(r => {
+        if (r.code === 0) { toast('预设已保存: ' + name, 'success'); popPresetSel(); $('presetSaveRow').style.display = 'none'; }
+        else toast('保存失败', 'error');
+      }).catch(() => toast('保存失败', 'error'));
+    }
+    function applyPreset () {
+      const idx = parseInt($('presetSel')?.value);
+      if (isNaN(idx)) { toast('请选择一个预设', 'error'); return; }
+      const preset = (C.presets || [])[idx];
+      if (!preset) { toast('预设不存在', 'error'); return; }
+      const gid = editMode;
+      if (gid) {
+        C.groups = C.groups || {};
+        C.groups[gid] = { ...JSON.parse(JSON.stringify(preset.settings)), useGlobal: false };
+        stg('grp-ug', false); fillGroup(gid); setFormDisabled(false);
+      } else {
+        C.global = { ...JSON.parse(JSON.stringify(preset.settings)), useGlobal: false };
+        if (preset.globalFields) {
+          const gf = preset.globalFields;
+          if (gf.filterKeywords) C.filterKeywords = gf.filterKeywords.slice();
+          if (gf.filterPunishLevel !== undefined) C.filterPunishLevel = gf.filterPunishLevel;
+          if (gf.filterBanMinutes !== undefined) C.filterBanMinutes = gf.filterBanMinutes;
+          if (gf.leaveBlacklist !== undefined) C.leaveBlacklist = gf.leaveBlacklist;
+          if (gf.spamDetect !== undefined) C.spamDetect = gf.spamDetect;
+          if (gf.spamWindow !== undefined) C.spamWindow = gf.spamWindow;
+          if (gf.spamThreshold !== undefined) C.spamThreshold = gf.spamThreshold;
+          if (gf.spamBanMinutes !== undefined) C.spamBanMinutes = gf.spamBanMinutes;
+          if (gf.msgFilter) C.msgFilter = { ...gf.msgFilter };
+          if (gf.welcomeMessage !== undefined) C.welcomeMessage = gf.welcomeMessage;
+          if (gf.qaList) C.qaList = gf.qaList.slice();
+        }
+        fillGlobal();
+      }
+      toast('已应用预设: ' + preset.name, 'success');
+    }
+    function showManagePresets () {
+      $('presetMgrRow').style.display = 'block'; $('presetSaveRow').style.display = 'none';
+      renderPresetMgr();
+    }
+    function renderPresetMgr () {
+      const c = $('presetMgrList'); const presets = C.presets || [];
+      if (!presets.length) { c.innerHTML = '<p class="text-xs text-slate-400">暂无预设</p>'; return; }
+      c.innerHTML = presets.map((p, i) => `<div class="flex items-center justify-between p-2.5 mb-1.5 rounded-lg bg-slate-50/80 dark:bg-slate-800/30 border border-blue-100/20 dark:border-blue-900/10"><span class="text-xs font-medium">${esc(p.name)}</span><button onclick="delPreset(${i})" class="btn btn-d" style="font-size:10px;padding:2px 8px">删除</button></div>`).join('') + '<div class="mt-1.5"><button onclick="$(\'presetMgrRow\').style.display=\'none\'" class="text-[10px] text-slate-400 cursor-pointer border-none bg-transparent hover:text-blue-500 transition-colors">关闭</button></div>';
+    }
+    function delPreset (i) {
+      const presets = C.presets || [];
+      if (i < 0 || i >= presets.length) return;
+      const name = presets[i].name;
+      presets.splice(i, 1); C.presets = presets;
+      af('/presets', 'POST', { presets: C.presets }).then(r => {
+        if (r.code === 0) { toast('已删除预设: ' + name, 'success'); popPresetSel(); renderPresetMgr(); }
+        else toast('删除失败', 'error');
+      }).catch(() => toast('删除失败', 'error'));
+    }
+
+    async function init () {
+      await Promise.all([loadCfg(), loadGrps()]);
+      popGrpSel(); updDash();
+      $('d-owner')?.addEventListener('input', function () { C.ownerQQs = this.value; const ow = this.value.split(',').map(s => s.trim()).filter(Boolean); $('ownerPv').textContent = ow.length ? `当前主人：${ow.join('、')}（共${ow.length}人）` : '尚未设置主人'; });
+    }
+    init();
+  </script>
+</body>
+
+</html>

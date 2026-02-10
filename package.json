@@ -1,0 +1,27 @@
+{
+  "name": "napcat-plugin-groupguard",
+  "plugin": "群管插件",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.mjs",
+  "description": "群管插件：自动通过入群申请，新成员数学验证，超时或答错踢出",
+  "author": "冷曦",
+  "napcat": {
+    "tags": [
+      "群管",
+      "工具"
+    ],
+    "minVersion": "4.14.0"
+  },
+  "dependencies": {
+    "napcat-types": "0.0.9"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^6.0.0"
+  },
+  "scripts": {
+    "build": "vite build"
+  }
+}
