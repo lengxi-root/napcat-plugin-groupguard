@@ -418,11 +418,38 @@ export async function handleCommand (event: OB11Message, ctx: NapCatPluginContex
     return true;
   }
 
+  // ===== 活跃统计 =====
+  if (text === '活跃统计') {
+    const stats = pluginState.activityStats[groupId];
+    if (!stats || !Object.keys(stats).length) { await pluginState.sendGroupText(groupId, '本群暂无活跃统计数据'); return true; }
+    const selfId = String((event as any).self_id || '');
+    const entries = Object.entries(stats).sort((a, b) => b[1].msgCount - a[1].msgCount);
+    const today = new Date().toISOString().slice(0, 10);
+    const totalMsg = entries.reduce((s, [, r]) => s + r.msgCount, 0);
+    const todayMsg = entries.reduce((s, [, r]) => s + (r.todayDate === today ? r.todayCount : 0), 0);
+    const summary = `📊 本群活跃统计\n总消息数：${totalMsg}\n今日消息：${todayMsg}\n统计人数：${entries.length}`;
+    // 分页，每页15人
+    const pages: string[] = [];
+    const pageSize = 15;
+    for (let i = 0; i < entries.length; i += pageSize) {
+      const chunk = entries.slice(i, i + pageSize);
+      const lines = chunk.map(([uid, r], idx) => {
+        const rank = i + idx + 1;
+        const todayC = r.todayDate === today ? r.todayCount : 0;
+        const lastTime = new Date(r.lastActive).toLocaleString('zh-CN', { hour12: false });
+        return `${rank}. ${uid}\n   总消息：${r.msgCount} | 今日：${todayC}\n   最后活跃：${lastTime}`;
+      });
+      pages.push(`排行榜（${i + 1}-${i + chunk.length}）\n\n${lines.join('\n\n')}`);
+    }
+    const nodes = [summary, ...pages].map(content => ({
+      type: 'node', data: { nickname: '📊 活跃统计', user_id: selfId, content: [{ type: 'text', data: { text: content } }] },
+    }));
+    await pluginState.callApi('send_group_forward_msg', { group_id: groupId, messages: nodes });
+    return true;
+  }
+
   return false;
 }
-
-
-/** 处理黑名单用户（在群内发消息立即撤回+踢出，检查全局+群独立黑名单） */
 export async function handleBlacklist (groupId: string, userId: string, messageId: string): Promise<boolean> {
   const isGlobalBlack = pluginState.isBlacklisted(userId);
   const settings = pluginState.getGroupSettings(groupId);
@@ -447,18 +474,25 @@ export async function handleFilterKeywords (groupId: string, userId: string, mes
   const level = (groupKw && groupKw.length) ? (settings.filterPunishLevel || 1) : (pluginState.config.filterPunishLevel || 1);
   pluginState.log('info', `违禁词触发: 群 ${groupId} 用户 ${userId} 触发「${matched}」，惩罚等级 ${level}`);
 
+  // 脱敏：只显示首尾字符
+  const masked = matched.length <= 2 ? '*'.repeat(matched.length) : matched[0] + '*'.repeat(matched.length - 2) + matched[matched.length - 1];
+
   // 等级1+：撤回
   await pluginState.callApi('delete_msg', { message_id: messageId });
+
+  if (level === 1) {
+    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 消息已撤回，原因：触发违禁词「${masked}」`);
+  }
 
   if (level >= 2) {
     const banMin = (groupKw && groupKw.length) ? (settings.filterBanMinutes || 10) : (pluginState.config.filterBanMinutes || 10);
     await pluginState.callApi('set_group_ban', { group_id: groupId, user_id: userId, duration: banMin * 60 });
-    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 触发违禁词，已禁言 ${banMin} 分钟`);
+    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 消息已撤回并禁言 ${banMin} 分钟，原因：触发违禁词「${masked}」`);
   }
 
   if (level >= 3) {
     setTimeout(() => pluginState.callApi('set_group_kick', { group_id: groupId, user_id: userId, reject_add_request: false }), 1000);
-    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 触发违禁词，已踢出`);
+    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 已被移出群聊，原因：触发违禁词「${masked}」`);
   }
 
   if (level >= 4) {
@@ -467,6 +501,7 @@ export async function handleFilterKeywords (groupId: string, userId: string, mes
       pluginState.config.blacklist.push(userId);
       saveConfig(ctx);
     }
+    await pluginState.sendGroupText(groupId, `⚠️ ${userId} 已被加入黑名单，原因：触发违禁词「${masked}」`);
   }
 
   return true;
