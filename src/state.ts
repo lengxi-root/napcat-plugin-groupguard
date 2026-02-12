@@ -21,6 +21,7 @@ class PluginState {
   config: PluginConfig = JSON.parse(JSON.stringify(DEFAULT_PLUGIN_CONFIG));
   sessions: Map<string, VerifySession> = new Map();
   pendingComments: Map<string, string> = new Map();
+  botId = '';  // 机器人自身QQ号
   /** 防撤回消息缓存 key: messageId */
   msgCache: Map<string, { userId: string; groupId: string; raw: string; time: number; }> = new Map();
   /** 刷屏检测缓存 key: `${groupId}:${userId}`, value: 时间戳数组 */
@@ -91,6 +92,15 @@ class PluginState {
   }
   async sendGroupText (groupId: string, text: string): Promise<void> {
     await this.sendGroupMsg(groupId, [{ type: 'text', data: { text } }]);
+  }
+
+  /** 检查机器人是否是群管理员或群主 */
+  async isBotAdmin (groupId: string): Promise<boolean> {
+    if (!this.botId) return false;
+    try {
+      const info = await this.callApi('get_group_member_info', { group_id: groupId, user_id: this.botId }) as { role?: string; } | null;
+      return info?.role === 'admin' || info?.role === 'owner';
+    } catch { return false; }
   }
 
   /** 加载活跃统计数据 */

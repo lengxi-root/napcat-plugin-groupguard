@@ -62,6 +62,14 @@ const plugin_init: PluginModule['plugin_init'] = async (ctx: NapCatPluginContext
   setInterval(() => pluginState.saveActivity(), 120000);
 
   registerRoutes(ctx);
+
+  // 获取机器人QQ号
+  try {
+    const loginInfo = await ctx.actions.call('get_login_info', {} as never, ctx.adapterName, ctx.pluginManager.config) as { user_id?: number | string; } | undefined;
+    pluginState.botId = loginInfo?.user_id ? String(loginInfo.user_id) : '';
+    if (pluginState.botId) pluginState.log('info', `机器人QQ: ${pluginState.botId}`);
+  } catch { /* ignore */ }
+
   pluginState.log('info', '群管插件初始化完成');
 };
 
@@ -294,6 +302,20 @@ const plugin_onevent: PluginModule['plugin_onevent'] = async (ctx: NapCatPluginC
   if (e.post_type === 'notice' && e.notice_type === 'group_increase') {
     const groupId = String(e.group_id);
     const userId = String(e.user_id);
+
+    // 跳过机器人自身入群
+    if (userId === pluginState.botId) {
+      pluginState.log('info', `机器人自身加入群 ${groupId}，跳过验证`);
+      return;
+    }
+
+    // 检查机器人是否是管理员，非管理员不验证
+    const isAdmin = await pluginState.isBotAdmin(groupId);
+    if (!isAdmin) {
+      pluginState.debug(`机器人在群 ${groupId} 不是管理员，跳过验证`);
+      return;
+    }
+
     const settings = pluginState.getGroupSettings(groupId);
 
     if (!settings.enableVerify) {
