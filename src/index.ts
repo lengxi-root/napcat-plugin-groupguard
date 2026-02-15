@@ -238,7 +238,7 @@ const plugin_onmessage: PluginModule['plugin_onmessage'] = async (ctx: NapCatPlu
   pluginState.recordActivity(groupId, userId);
 
   // 7. 缓存消息（防撤回）
-  cacheMessage(messageId, userId, groupId, raw);
+  cacheMessage(messageId, userId, groupId, raw, messageSegments);
 
   // 8. 回应表情
   await handleEmojiReact(groupId, userId, messageId, selfId);

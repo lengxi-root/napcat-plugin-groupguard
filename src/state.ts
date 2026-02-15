@@ -39,7 +39,7 @@ class PluginState {
   pendingComments: Map<string, string> = new Map();
   botId = '';  // 机器人自身QQ号
   /** 防撤回消息缓存 key: messageId */
-  msgCache: Map<string, { userId: string; groupId: string; raw: string; time: number; }> = new Map();
+  msgCache: Map<string, { userId: string; groupId: string; raw: string; segments: any[]; time: number; }> = new Map();
   /** 刷屏检测缓存 key: `${groupId}:${userId}`, value: 时间戳数组 */
   spamCache: Map<string, number[]> = new Map();
   /** 调试日志缓冲区 */

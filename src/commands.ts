@@ -543,27 +543,38 @@ export async function handleAntiRecall (groupId: string, messageId: string, user
   if (!cached) return;
   pluginState.msgCache.delete(messageId);
 
+  // 构建撤回内容：优先使用原始消息段（图片/语音等可正常显示），降级为 raw 文本
+  const contentSegments: any[] = cached.segments.length > 0
+    ? cached.segments
+    : [{ type: 'text', data: { text: cached.raw } }];
+
   if (isGroupMode) {
     await pluginState.sendGroupMsg(groupId, [
-      { type: 'text', data: { text: `🔔 防撤回 - 用户 ${userId} 撤回了消息：\n${cached.raw}` } },
+      { type: 'text', data: { text: `🔔 防撤回 - 用户 ${userId} 撤回了消息：\n` } },
+      ...contentSegments,
     ]);
   }
 
   if (isGlobalMode) {
     const now = new Date();
     const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    const msg = `🔔 防撤回通知\n群号：${groupId}\nQQ号：${userId}\n时间：${timeStr}\n撤回内容：${cached.raw}`;
     const owners = pluginState.config.ownerQQs.split(',').map(s => s.trim()).filter(Boolean);
     for (const owner of owners) {
-      await pluginState.callApi('send_private_msg', { user_id: owner, message: [{ type: 'text', data: { text: msg } }] });
+      await pluginState.callApi('send_private_msg', {
+        user_id: owner,
+        message: [
+          { type: 'text', data: { text: `🔔 防撤回通知\n群号：${groupId}\nQQ号：${userId}\n时间：${timeStr}\n撤回内容：\n` } },
+          ...contentSegments,
+        ],
+      });
     }
   }
 }
 
 /** 缓存消息（用于防撤回） */
-export function cacheMessage (messageId: string, userId: string, groupId: string, raw: string): void {
+export function cacheMessage (messageId: string, userId: string, groupId: string, raw: string, segments?: any[]): void {
   if (!pluginState.config.antiRecallGroups.includes(groupId) && !pluginState.config.globalAntiRecall) return;
-  pluginState.msgCache.set(messageId, { userId, groupId, raw, time: Date.now() });
+  pluginState.msgCache.set(messageId, { userId, groupId, raw, segments: segments || [], time: Date.now() });
   const now = Date.now();
   for (const [k, v] of pluginState.msgCache) {
     if (now - v.time > 600000) pluginState.msgCache.delete(k);
@@ -646,7 +657,13 @@ export async function handleMsgTypeFilter (groupId: string, userId: string, mess
   else if (filter.blockForward && types.includes('forward')) { blocked = true; reason = '合并转发'; }
   else if (filter.blockLightApp && raw.includes('[CQ:json,')) { blocked = true; reason = '小程序卡片'; }
   else if (filter.blockContact && (raw.includes('"app":"com.tencent.contact.lua"') || raw.includes('"app":"com.tencent.qq.checkin"'))) { blocked = true; reason = '名片分享'; }
-  else if (filter.blockUrl && /https?:\/\//i.test(raw)) { blocked = true; reason = '链接'; }
+  else if (filter.blockUrl) {
+    // 剥离 CQ 码后再检测链接，避免图片/视频等 CQ 码中自带的 URL 被误判
+    const plainText = raw.replace(/\[CQ:[^\]]+\]/g, '');
+    // 匹配: http(s)://xxx | www.xxx | 域名.常见后缀（如 baidu.com、google.cn）
+    const urlPattern = /https?:\/\/\S+|www\.\S+|[a-zA-Z0-9][-a-zA-Z0-9]{0,62}\.(?:com|cn|net|org|io|cc|co|me|top|xyz|info|dev|app|site|vip|pro|tech|cloud|link|fun|icu|club|ltd|live|tv|asia|biz|wang|mobi|online|shop|store|work)\b/i;
+    if (urlPattern.test(plainText)) { blocked = true; reason = '链接'; }
+  }
 
   if (!blocked) return false;
   await pluginState.callApi('delete_msg', { message_id: messageId });
