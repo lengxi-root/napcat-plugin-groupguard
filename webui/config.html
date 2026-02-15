@@ -410,7 +410,7 @@
           🛡️</div>
         <div>
           <h1 class="font-bold text-sm leading-tight">群管插件</h1>
-          <p class="text-[10px] text-slate-400 font-medium">GroupGuard v1.0.0</p>
+          <p class="text-[10px] text-slate-400 font-medium" id="sidebar-ver">GroupGuard</p>
         </div>
       </div>
       <nav class="flex-1 px-2.5 py-1 overflow-y-auto scr">
@@ -464,7 +464,7 @@
                 🛡️</div>
               <div>
                 <h3 class="font-bold text-lg">群管插件</h3>
-                <p class="text-xs text-slate-400">GroupGuard v1.0.0 · by 冷曦</p>
+                <p class="text-xs text-slate-400" id="dash-ver">GroupGuard · by 冷曦</p>
               </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -897,7 +897,7 @@
 
     function badge (id, on) { const e = $(id); if (!e) return; e.textContent = on ? '已开启' : '已关闭'; e.className = on ? 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'; }
 
-    async function loadCfg () { try { const r = await af('/config'); if (r.code === 0) { C = r.data || {}; fillGlobal(); $('sDot').className = 'w-2 h-2 rounded-full bg-emerald-400'; $('sTxt').textContent = '已连接'; return true; } } catch { } toast('加载配置失败', 'error'); return false; }
+    async function loadCfg () { try { const r = await af('/config'); if (r.code === 0) { C = r.data || {}; fillGlobal(); $('sDot').className = 'w-2 h-2 rounded-full bg-emerald-400'; $('sTxt').textContent = '已连接'; if (r.version) { const v = 'v' + r.version; $('sidebar-ver').textContent = 'GroupGuard ' + v; $('dash-ver').textContent = 'GroupGuard ' + v + ' · by 冷曦'; } return true; } } catch { } toast('加载配置失败', 'error'); return false; }
     async function loadGrps () { try { const r = await af('/groups'); if (r.code === 0) GL = r.data || []; } catch { } }
 
     function fillGlobal () {

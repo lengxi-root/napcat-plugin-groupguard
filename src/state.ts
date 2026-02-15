@@ -6,6 +6,20 @@ import type { PluginConfig, VerifySession, GroupGuardSettings, ActivityRecord } 
 import { DEFAULT_PLUGIN_CONFIG } from './config';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
+
+// 运行时从 package.json 读取版本号
+function getPluginVersion (): string {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const pkgPath = path.join(__dirname, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      return pkg.version || '1.0.0';
+    }
+  } catch { /* 读取失败使用默认版本 */ }
+  return '1.0.0';
+}
 
 interface LogEntry {
   time: number;
@@ -14,6 +28,8 @@ interface LogEntry {
 }
 
 class PluginState {
+  /** 插件版本（运行时从 package.json 读取） */
+  version: string = getPluginVersion();
   logger: PluginLogger | null = null;
   actions: ActionMap | undefined;
   adapterName = '';

@@ -32,7 +32,7 @@ const plugin_init: PluginModule['plugin_init'] = async (ctx: NapCatPluginContext
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
           <div style="width:36px;height:36px;background:rgba(59,130,246,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🛡️</div>
           <div>
-            <h3 style="margin:0;font-size:16px;font-weight:600;">群管插件 v1.0.0</h3>
+            <h3 style="margin:0;font-size:16px;font-weight:600;">群管插件 v${pluginState.version}</h3>
             <p style="margin:2px 0 0;font-size:12px;color:#9ca3af;">napcat-plugin-groupguard</p>
           </div>
         </div>
@@ -85,7 +85,7 @@ function registerRoutes (ctx: NapCatPluginContext): void {
   }
 
   router.getNoAuth('/config', (_req: any, res: any) => {
-    res.json({ code: 0, data: pluginState.config });
+    res.json({ code: 0, data: pluginState.config, version: pluginState.version });
   });
 
   router.postNoAuth('/config', (req: any, res: any) => {
